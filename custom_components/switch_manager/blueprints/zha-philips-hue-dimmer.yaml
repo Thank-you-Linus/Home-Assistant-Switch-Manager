@@ -8,11 +8,8 @@ buttons:
     width: 189
     height: 159
     actions:
-      - title: init
-        conditions:
-          - key: command
-            value: on_press
       - title: press
+        # linus_script: "linus.press_light_switch"
         conditions:
           - key: command
             value: on_short_release
@@ -40,15 +37,15 @@ buttons:
         conditions:
           - key: command
             value: on_long_release
+      - title: init
+        conditions:
+          - key: command
+            value: on_press
   - x: 2
     y: 161
     width: 189
     height: 90
     actions:
-      - title: init
-        conditions:
-          - key: command
-            value: up_press
       - title: press
         conditions:
           - key: command
@@ -77,15 +74,15 @@ buttons:
         conditions:
           - key: command
             value: up_long_release
+      - title: init
+        conditions:
+          - key: command
+            value: up_press
   - x: 2
     y: 251
     width: 189
     height: 90
     actions:
-      - title: init
-        conditions:
-          - key: command
-            value: down_press
       - title: press
         conditions:
           - key: command
@@ -114,15 +111,15 @@ buttons:
         conditions:
           - key: command
             value: down_long_release
+      - title: init
+        conditions:
+          - key: command
+            value: down_press
   - x: 2
     y: 341
     width: 189
     height: 159
     actions:
-      - title: init
-        conditions:
-          - key: command
-            value: off_press
       - title: press
         conditions:
           - key: command
@@ -151,3 +148,7 @@ buttons:
         conditions:
           - key: command
             value: off_long_release
+      - title: init
+        conditions:
+          - key: command
+            value: off_press
