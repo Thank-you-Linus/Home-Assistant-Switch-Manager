@@ -9,7 +9,7 @@ buttons:
     height: 159
     actions:
       - title: press
-        # linus_script: "linus.press_light_switch"
+        default_script: "linus.press_light_switch"
         conditions:
           - key: command
             value: on_short_release
