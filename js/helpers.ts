@@ -34,6 +34,7 @@ export const createConfigFromBlueprint = ( blueprint: SwitchManagerBlueprint ): 
     let config: SwitchManagerConfig = {
         id: null,
         name: 'New Switch',
+        area: '',
         enabled: true,
         identifier: '',
         blueprint: blueprint,
@@ -46,9 +47,18 @@ export const createConfigFromBlueprint = ( blueprint: SwitchManagerBlueprint ): 
             actions: []
         };
         button.actions.forEach( (action, ii) => {
+            const sequence = [] as any[]
+            if (action.default_script) {
+                sequence.push({
+                  "service": action.default_script,
+                  "data": {
+                    "area": ""
+                  }
+                })
+            }
             config.buttons[i].actions[ii] = {
                 mode: MODES[0],
-                sequence: []
+                sequence
             };
         });
     });
@@ -95,3 +105,20 @@ export const showConfirmDialog = (
       },
     });
 });
+
+export function updateObject(keyName: string, newValFunction: (value: any) => any, object: any) {
+    if (Array.isArray(object))
+        return object.map(i => updateObject(keyName, newValFunction, i));
+
+    const results = {};
+    for (var key in object) {
+        if (key === keyName) {
+            results[key] = newValFunction(object[key]);
+        } else if (typeof object[key] === "object" && object[key] !== null) {
+            results[key] = updateObject(keyName, newValFunction, object[key]);
+        } else {
+            results[key] = object[key];
+        }
+    }
+    return results;
+}

@@ -20,11 +20,12 @@ import {
 } from "@mdi/js";
 import { SwitchManagerBlueprint, SwitchManagerConfig, SwitchManagerConfigButton } from "./types";
 import { MODES } from "../ha-frontend/data/script";
-import { 
-    buildAssetUrl, 
-    buildUrl, 
-    buildWSPath, 
+import {
+    buildAssetUrl,
+    buildUrl,
+    buildWSPath,
     createConfigFromBlueprint,
+    updateObject,
     showConfirmDialog
 } from "./helpers";
 import { navigate } from "../ha-frontend/common/navigate";
@@ -84,7 +85,7 @@ class SwitchManagerSwitchEditor extends LitElement
     @query('switch-manager-button-actions') button_actions;
     @query("ha-yaml-editor") private _yamlEditor?: HaYamlEditor;
 
-    render() 
+    render()
     {
         if( ! this.config )
             return html``;
@@ -102,7 +103,7 @@ class SwitchManagerSwitchEditor extends LitElement
                             @click=${this._backTapped}>
                         </ha-icon-button>
                         <div main-title id="title-container">
-                            <span>Switch Manager - ${this.config?.name}</span>
+                            <span>Switch Manager - ${this.config?.name} ${this.config?.area && `[${this.config?.area}]`}</span>
                         </div>
                         <div>
                             <ha-button-menu corner="BOTTOM_START" slot="toolbar-icon">
@@ -158,9 +159,9 @@ class SwitchManagerSwitchEditor extends LitElement
                                             .path=${!this.config?.enabled ? mdiPlayCircleOutline : mdiStopCircleOutline}>
                                         </ha-svg-icon>
                                 </mwc-list-item>
-                                
+
                                 <li divider role="separator"></li>
-                                
+
                                 <mwc-list-item
                                     graphic="icon"
                                     .disabled=${!this.config || this.is_new || this.config?._error}
@@ -188,107 +189,116 @@ class SwitchManagerSwitchEditor extends LitElement
                                 </mwc-list-item>
                             </ha-button-menu>
                         </div>
-                    </app-toolbar> 
+                    </app-toolbar>
                 </app-header>
             </ha-app-layout>
             <hui-view>
-                <hui-panel-view>                 
+                <hui-panel-view style="position: relative;">
                     ${!this.config?._error ? html`
-                    <h3 id="blueprint-name">${this.blueprint?.service} / ${this.blueprint?.name}</h3>`:''}
+                    <h3 id="blueprint-name">${this.blueprint?.service} / ${this.blueprint?.name}</h3>` : ''}
 
-                    <div id="switch-image" rotate="${this.config.rotate}">
-                    ${this.blueprint && !this.blueprint?.has_image ?
-                        html`<ha-svg-icon .path=${mdiGestureTapButton}></ha-svg-icon>` :
-                        html`<svg id="switch-svg"></svg>`}
+                    <div class="container-box">
+                        <div class="image-box">
+
+                            <div id="switch-image" style="width: 100%;" rotate="${this.config.rotate}">
+                            ${this.blueprint && !this.blueprint?.has_image ?
+                                html`<ha-svg-icon .path=${mdiGestureTapButton}></ha-svg-icon>` :
+                                html`<svg id="switch-svg"></svg>`}
+                            </div>
+
+                        </div>
+                        <div class="automation-box">
+
+                            ${!this.config?._error ? html`
+                            <switch-manager-button-actions style="width: 100%;"
+                                .hass=${this.hass}
+                                .blueprint_actions=${this.blueprint?.buttons[this.button_index]?.actions}
+                                .config_actions=${this.config.buttons[this.button_index].actions}
+                                .index=${this.action_index}
+                                @changed=${this._actionChanged}>
+                            </switch-manager-button-actions>`: ''}
+
+                            <ha-card outlined>
+                                <div class="card-content">
+
+                                    ${this._errors ? html`
+                                    <ha-alert alert-type="error">
+                                        ${this._errors}
+                                        ${this.config.is_mismatch ? html`<mwc-button slot="action" @click=${this._fixMismatch}>Fix</mwc-button>` : ''}
+                                    </ha-alert>` : ''}
+
+                                    ${this.config && !this.config.enabled ? html`
+                                    <ha-alert alert-type="info">
+                                        Switch is disabled
+                                        <mwc-button slot="action" @click=${this._toggleEnabled}>
+                                            Enable
+                                        </mwc-button>
+                                    </ha-alert>` : ''}
+                                    ${!this.config?._error ? html`
+                                    <div id="sequence-container">
+                                        <div class="header">
+                                            <h2 id="sequence-heading" class="name">
+                                                Sequence
+                                                <ha-selector-select
+                                                    id="mode-selector"
+                                                    .hass=${this.hass}
+                                                    .value=${this.config?.buttons[this.button_index]?.actions[this.action_index].mode}
+                                                    label="Mode"
+                                                    .selector=${{
+                                                        select: {
+                                                            mode: "dropdown",
+                                                            options: MODES.map((mode) => ({
+                                                                label: mode.charAt(0).toUpperCase() + mode.slice(1),
+                                                                value: mode,
+                                                            })),
+                                                        }}
+                                                    }
+                                                    @value-changed=${this._modeValueChanged}>
+                                                </ha-selector-select>
+                                            </h2>
+
+                                            <ha-button-menu corner="TOP_START" slot="toolbar-icon">
+                                                <ha-icon-button
+                                                    slot="trigger"
+                                                    .label=${this.hass.localize("ui.common.menu")}
+                                                    .path=${mdiDotsVertical}>
+                                                </ha-icon-button>
+
+                                                <mwc-list-item
+                                                    graphic="icon"
+                                                    @click=${this._toggleYaml}>
+                                                        ${!this._is_yaml ? 'Yaml Editor' : 'Visual Editor'}
+                                                        <ha-svg-icon slot="graphic" .path=${!this._is_yaml? mdiFileDocumentEditOutline : mdiViewDashboardEditOutline}>
+                                                        </ha-svg-icon>
+                                                </mwc-list-item>
+                                            </ha-button-menu>
+
+                                        </div>
+
+                                        ${this._is_yaml ? html`
+                                        <ha-yaml-editor
+                                            .hass=${this.hass}
+                                            .value=${this.sequence}
+                                            @value-changed=${this._configSequenceChanged}>
+                                        </ha-yaml-editor>`
+                                        : html`
+                                        <ha-automation-action
+                                            .hass=${this.hass}
+                                            role="region"
+                                            aria-labelledby="sequence-heading"
+                                            .actions=${this.sequence}
+                                            @value-changed=${this._configSequenceChanged}
+                                            .narrow=${this.narrow}
+                                            .disabled=${this.disabled}>
+                                        </ha-automation-action>`}
+
+                                    </div>`:''}
+                                </div>
+                            </ha-card>
+
+                        </div>
                     </div>
 
-                    ${!this.config?._error ? html`
-                    <switch-manager-button-actions
-                        .hass=${this.hass}
-                        .blueprint_actions=${this.blueprint?.buttons[this.button_index]?.actions}
-                        .config_actions=${this.config.buttons[this.button_index].actions}
-                        .index=${this.action_index}
-                        @changed=${this._actionChanged}>
-                    </switch-manager-button-actions>`: ''}
-                    
-                    <ha-card outlined>
-                        <div class="card-content">
-
-                            ${this._errors ? html`
-                            <ha-alert alert-type="error">
-                                ${this._errors}
-                                ${this.config.is_mismatch ? html`<mwc-button slot="action" @click=${this._fixMismatch}>Fix</mwc-button>` : ''}
-                            </ha-alert>` : ''}
-
-                            ${this.config && !this.config.enabled ? html`
-                            <ha-alert alert-type="info">
-                                Switch is disabled
-                                <mwc-button slot="action" @click=${this._toggleEnabled}>
-                                    Enable
-                                </mwc-button>
-                            </ha-alert>` : ''}
-                            ${!this.config?._error ? html`
-                            <div id="sequence-container">
-                                <div class="header">
-                                    <h2 id="sequence-heading" class="name">
-                                        Sequence                                
-                                        <ha-selector-select
-                                            id="mode-selector"
-                                            .hass=${this.hass}
-                                            .value=${this.config?.buttons[this.button_index]?.actions[this.action_index].mode}
-                                            label="Mode"
-                                            .selector=${{       
-                                                select: {
-                                                    mode: "dropdown",
-                                                    options: MODES.map((mode) => ({
-                                                        label: mode.charAt(0).toUpperCase() + mode.slice(1),
-                                                        value: mode,
-                                                    })),
-                                                }}
-                                            }
-                                            @value-changed=${this._modeValueChanged}>
-                                        </ha-selector-select>
-                                    </h2>
-
-                                    <ha-button-menu corner="TOP_START" slot="toolbar-icon">
-                                        <ha-icon-button
-                                            slot="trigger"
-                                            .label=${this.hass.localize("ui.common.menu")}
-                                            .path=${mdiDotsVertical}>
-                                        </ha-icon-button>
-        
-                                        <mwc-list-item
-                                            graphic="icon"
-                                            @click=${this._toggleYaml}>
-                                                ${!this._is_yaml ? 'Yaml Editor' : 'Visual Editor'}
-                                                <ha-svg-icon slot="graphic" .path=${!this._is_yaml? mdiFileDocumentEditOutline : mdiViewDashboardEditOutline}>
-                                                </ha-svg-icon>
-                                        </mwc-list-item>
-                                    </ha-button-menu>
-
-                                </div>
-
-                                ${this._is_yaml ? html`
-                                <ha-yaml-editor
-                                    .hass=${this.hass}
-                                    .value=${this.sequence}
-                                    @value-changed=${this._configSequenceChanged}>
-                                </ha-yaml-editor>` 
-                                : html`
-                                <ha-automation-action
-                                    .hass=${this.hass}
-                                    role="region"
-                                    aria-labelledby="sequence-heading"
-                                    .actions=${this.sequence}
-                                    @value-changed=${this._configSequenceChanged}
-                                    .narrow=${this.narrow}
-                                    .disabled=${this.disabled}>
-                                </ha-automation-action>`}
-
-                            </div>`:''}
-                        </div>
-                    </ha-card>
-                    
                     ${!this.config?._error ? html`
                     <div class="fab-container">
                         <ha-fab
@@ -305,7 +315,7 @@ class SwitchManagerSwitchEditor extends LitElement
                         </ha-fab>
                     </div>`:''}
                 </hui-panel-view>
-            </hui-view>            
+            </hui-view>
           `;
     }
 
@@ -328,6 +338,21 @@ class SwitchManagerSwitchEditor extends LitElement
             }
             mwc-list-item {
                 min-width: 165px;
+            }
+            .container-box {
+                display: flex;
+                height: 100%;
+            }
+            .image-box {
+                display: flex;
+                flex: 1;
+            }
+            .automation-box {
+                display: flex;
+                flex: 1;
+                flex-direction: column;
+                height: 100%;
+                overflow: scroll;
             }
             ha-card {
                 margin: 0 auto;
@@ -425,14 +450,14 @@ class SwitchManagerSwitchEditor extends LitElement
             `];
     }
 
-    connectedCallback(): void 
+    connectedCallback(): void
     {
         super.connectedCallback();
         this._loadConfig();
         this.startListeners();
     }
 
-    disconnectedCallback(): void 
+    disconnectedCallback(): void
     {
         this._killListener( '_reloadListener' );
         this._killListener( '_subscribedMonitor' );
@@ -450,7 +475,7 @@ class SwitchManagerSwitchEditor extends LitElement
         }
         return false;
     }
-    
+
     private async startListeners()
     {
         this._reloadListener = await this.hass!.connection.subscribeEvents( (event) => {
@@ -472,11 +497,11 @@ class SwitchManagerSwitchEditor extends LitElement
             this.is_new = true;
             this._dirty = true;
             if( 'blueprint' in this.params )
-                this._loadBlueprint(this.params.blueprint).then( r => {
+            this._loadBlueprint(this.params.blueprint).then( r => {
                     this._setConfig( createConfigFromBlueprint(r.blueprint) );
                     this._showRenameDialog();
                 });
-        }  
+        }
     }
 
     private _loadBlueprint(id: string)
@@ -506,7 +531,7 @@ class SwitchManagerSwitchEditor extends LitElement
         // Start fresh
         this._killListener('_subscribedMonitor');
         this._subscribedMonitor = await this.hass.connection.subscribeMessage((msg) => {
-            
+
             if( msg.event == 'action_triggered' )
             {
                 if( ! this.config?.identifier )
@@ -551,17 +576,17 @@ class SwitchManagerSwitchEditor extends LitElement
     {
         if( !this.blueprint?.has_image )
             return;
-        
+
         // Ensure SVG is in DOM
         await this.updateComplete;
-        
+
         // As this could be a reload, we ensure svg is empty
         this.svg.parentNode.replaceChild(this.svg.cloneNode(false), this.svg);
 
         var img = new Image;
         img.src = buildAssetUrl(`${this.blueprint.id}.png`);
-        img.onload = () => {      
-            // Add headroom for button strokes      
+        img.onload = () => {
+            // Add headroom for button strokes
             this.svg.setAttributeNS(null, 'viewBox', `0 0 ${(img.width).toString()} ${(img.height).toString()}`)
             var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
             svgimg.setAttributeNS(null, 'x', '0');
@@ -607,7 +632,7 @@ class SwitchManagerSwitchEditor extends LitElement
                 svgshape.addEventListener('click', ev => {
                     ev.preventDefault();
                     ev.stopPropagation();
-                    this._setButtonIndex(parseInt((<HTMLElement>ev.target).getAttribute('index')!));                
+                    this._setButtonIndex(parseInt((<HTMLElement>ev.target).getAttribute('index')!));
                 });
                 this.svg.append(svgshape);
             });
@@ -642,9 +667,9 @@ class SwitchManagerSwitchEditor extends LitElement
         this._block_save = true;
         this._dirty = false;
         this.hass.callWS({
-            type: buildWSPath('config/save'), 
+            type: buildWSPath('config/save'),
             config: {...this.config, blueprint: this.config.blueprint.id}
-        }).then(r => {            
+        }).then(r => {
             if( this.is_new )
             {
                 this.is_new = false;
@@ -656,7 +681,7 @@ class SwitchManagerSwitchEditor extends LitElement
         }).catch(error => {
             showToast(this, { message: error.message });
             this._errors = error.message;
-            this._dirty = true;            
+            this._dirty = true;
         }).finally(() => this._block_save = false);
     }
 
@@ -670,7 +695,7 @@ class SwitchManagerSwitchEditor extends LitElement
         if( index == this.button_index )
           return;
         this.button_index = index;
-        
+
         this.svg.querySelector('[selected]').removeAttribute('selected');
         this.svg.querySelector(`[index="${index}"]`).setAttribute('selected', '');
 
@@ -685,8 +710,8 @@ class SwitchManagerSwitchEditor extends LitElement
             this._yamlEditor?.setValue( this.sequence );
     }
 
-    private _configSequenceChanged(ev: CustomEvent) 
-    {   
+    private _configSequenceChanged(ev: CustomEvent)
+    {
         if( this._is_yaml )
         {
             if( ! ev.detail.value || ! Array.isArray(ev.detail.value) )
@@ -749,11 +774,11 @@ class SwitchManagerSwitchEditor extends LitElement
                 },
                 onClose: () => {}
             },
-        });        
+        });
     }
 
     private async _showRenameDialog(): Promise<void>
-    {        
+    {
         fireEvent(this, "show-dialog", {
             dialogTag: "switch-manager-dialog-rename-switch",
             dialogImport: () => import("./dialogs/dialog-rename-switch"),
@@ -761,7 +786,9 @@ class SwitchManagerSwitchEditor extends LitElement
                 config: this.config,
                 update: (config) => {
                     this.config!.name = config.name;
+                    this.config!.area = config.area;
                     this._dirty = true;
+                    this._updateSequence();
                     this.requestUpdate();
                 },
                 onClose: () => {
@@ -797,6 +824,11 @@ class SwitchManagerSwitchEditor extends LitElement
         }
         this.sequence = this.config!.buttons[this.button_index].actions[this.action_index].sequence;
 
+        // Add area if find in configuration
+        if (this.config!.area) {
+            this.sequence = updateObject('area', (val) => (val === '' ? this.config!.area : val), this.sequence) as any
+        }
+
         if( ! this._buttonTotalSequence( this.config!.buttons[this.button_index] ) )
         {
             this.svg?.querySelector('[selected]')?.setAttribute('empty', '');
@@ -809,7 +841,7 @@ class SwitchManagerSwitchEditor extends LitElement
 
     private _toggleEnabled()
     {
-        
+
         this.hass.callWS({ type: buildWSPath('config/enabled'), enabled: !this.config!.enabled, config_id: this.config!.id }).then( r => {
             this.config!.enabled = r.enabled;
             this.requestUpdate('config');
@@ -840,7 +872,7 @@ class SwitchManagerSwitchEditor extends LitElement
         });
     }
 
-    private async confirmUnsavedChanged(): Promise<boolean> 
+    private async confirmUnsavedChanged(): Promise<boolean>
     {
         if (this._dirty) {
             return showConfirmationDialog(this, {
@@ -858,7 +890,7 @@ class SwitchManagerSwitchEditor extends LitElement
         return true;
     }
 
-    private async _fixMismatch() 
+    private async _fixMismatch()
     {
         if( ! this.config!.is_mismatch )
             return;
@@ -887,7 +919,7 @@ class SwitchManagerSwitchEditor extends LitElement
         this._errors = undefined;
 
         this.hass.callWS({
-            type: buildWSPath('config/save'), 
+            type: buildWSPath('config/save'),
             config: {...this.config, blueprint: this.config!.blueprint.id},
             fix_mismatch: true
         }).then(r => {
@@ -897,8 +929,8 @@ class SwitchManagerSwitchEditor extends LitElement
             showToast(this, { message: error.message });
         });
     }
-    
-    private _backTapped = async () => 
+
+    private _backTapped = async () =>
     {
         const result = await this.confirmUnsavedChanged();
         if (result) {

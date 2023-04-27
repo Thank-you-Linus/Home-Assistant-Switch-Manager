@@ -154,6 +154,7 @@ class BlueprintButtonAction:
     def __init__(self, hass, config: dict, index):
         self._hass = hass
         self.title = config.get('title')
+        self.default_script = config.get('default_script')
         self.conditions = convert_conditions( hass, config.get('conditions', []) )
         self.index = index
 
