@@ -13,37 +13,39 @@ declare global {
 }
 
 @customElement('switch-manager-dialog-rename-switch')
-class SwitchManagerDialogRenameSwitch extends LitElement 
+class SwitchManagerDialogRenameSwitch extends LitElement
 {
     @property({ attribute: false }) public hass!: any;
 
     @state() private _opened = false;
-  
+
     @state() private _error?: string;
 
-    private _params!: any; 
+    private _params!: any;
 
     private _newName?: string;
+    private _newArea?: string;
 
-    public showDialog(params: any): void 
+    public showDialog(params: any): void
     {
         this._opened = true;
         this._error = undefined;
         this._params = params;
         this._newName = params.config.name;
+        this._newArea = params.config.area;
     }
 
-    public closeDialog(): void 
+    public closeDialog(): void
     {
         this._params.onClose();
-    
+
         if (this._opened) {
             fireEvent(this, "dialog-closed", { dialog: this.localName });
         }
         this._opened = false;
     }
 
-    protected render(): TemplateResult 
+    protected render(): TemplateResult
     {
         if (!this._opened) {
             return html``;
@@ -53,8 +55,10 @@ class SwitchManagerDialogRenameSwitch extends LitElement
                 open
                 scrimClickAction
                 @closed=${this.closeDialog}
-                .heading="${createCloseHeading(this.hass, 'Rename')}">
+                .heading="${createCloseHeading(this.hass, 'Add a new switch')}">
                 ${this._error ? html`<ha-alert alert-type="error">Missing Name</ha-alert>` : ""}
+
+                <h3 class="name">Change the switch name :</h3>
 
                 <ha-textfield
                     dialogInitialFocus
@@ -64,6 +68,16 @@ class SwitchManagerDialogRenameSwitch extends LitElement
                     required
                     type="string"
                     @input=${this._valueChanged}></ha-textfield>
+
+                <h3 class="name">Select an area :</h3>
+
+                <ha-area-picker
+                    .hass=${this.hass}
+                    .name=${"area"}
+                    .value=${this._newArea}
+                    @value-changed=${this._areaChanged}
+                  >
+                  </ha-area-picker>
 
                 <mwc-button @click=${this.closeDialog} slot="secondaryAction">
                     Cancel
@@ -99,6 +113,13 @@ class SwitchManagerDialogRenameSwitch extends LitElement
         this._newName = target.value;
     }
 
+    private _areaChanged(ev: CustomEvent)
+    {
+        ev.stopPropagation();
+        const target = ev.target as any;
+        this._newArea = target.value;
+    }
+
     private _save()
     {
         if (!this._newName) {
@@ -107,7 +128,8 @@ class SwitchManagerDialogRenameSwitch extends LitElement
         }
         this._params.update({
             ...this._params.config,
-            name: this._newName
+            name: this._newName,
+            area: this._newArea
         });
         this.closeDialog();
     }
