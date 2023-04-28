@@ -11,9 +11,9 @@ import {
     mdiGestureTapButton,
     mdiCancel
 } from "@mdi/js";
-import { 
-    buildAssetUrl, 
-    buildUrl,     
+import {
+    buildAssetUrl,
+    buildUrl,
     buildWSPath,
     showConfirmDialog
 } from "./helpers";
@@ -43,7 +43,7 @@ declare global {
 }
 
 @customElement('switch-manager-index')
-class SwitchManagerIndex extends LitElement 
+class SwitchManagerIndex extends LitElement
 {
     @property() hass!: any;
 
@@ -63,7 +63,7 @@ class SwitchManagerIndex extends LitElement
                     sortable: false,
                     filterable: false,
                     grows: false,
-                    width: '90px', 
+                    width: '90px',
                     template: (blueprint_id, data: any) => {
                         if( ! data.switch.valid_blueprint )
                             return '';
@@ -71,7 +71,7 @@ class SwitchManagerIndex extends LitElement
                             return html`<ha-svg-icon style="fill: var(--primary-color); margin: 0 auto;display:block;height: 85%;
                             width: 85%;" .path=${mdiGestureTapButton}></ha-svg-icon>`
                         return html`<img style="max-width: 100%;max-height: 48px;display: block;margin:0 auto;" src="${buildAssetUrl(`${blueprint_id}.png`)}" />`;
-                    }                
+                    }
                 },
                 name: {
                     title: 'Name',
@@ -80,7 +80,7 @@ class SwitchManagerIndex extends LitElement
                     sortable: true,
                     filterable: true,
                     grows: true,
-                    template: (name, data: any) => data.error ? 
+                    template: (name, data: any) => data.error ?
                         html`<span style="color: red;">${name} (${data.error})</span>`
                         : name
                 }
@@ -144,12 +144,12 @@ class SwitchManagerIndex extends LitElement
                         ]}>
                         </ha-icon-overflow-menu>`
             }
-            
+
             return columns;
         }
     )
 
-    render() 
+    render()
     {
         return html`
             <ha-app-layout>
@@ -162,7 +162,7 @@ class SwitchManagerIndex extends LitElement
                         <div main-title>Switch Manager</div>
                         <div>v${this.panel.config.version}</div>
                     </app-toolbar>
-                </app-header>      
+                </app-header>
             </ha-app-layout>
             <hui-view>
                 <hui-panel-view>
@@ -189,14 +189,14 @@ class SwitchManagerIndex extends LitElement
                     </div>
                 </hui-panel-view>
             </hui-view>
-        `;        
+        `;
     }
 
-    static get styles() 
+    static get styles()
     {
         return [
-            haStyle, 
-            haStyleScrollbar, 
+            haStyle,
+            haStyleScrollbar,
             fabStyle,
             css`
             ha-data-table {
@@ -209,8 +209,8 @@ class SwitchManagerIndex extends LitElement
         `];
     }
 
-    connectedCallback(): void 
-    {        
+    connectedCallback(): void
+    {
         super.connectedCallback();
         this._populateSwitches();
     }
@@ -221,7 +221,7 @@ class SwitchManagerIndex extends LitElement
         this.hass.callWS({type: buildWSPath('configs')}).then( r => {
             Object.values(r.configs as SwitchManagerConfig[]).forEach( (_switch: SwitchManagerConfig) => {
                 let blueprint;
-                
+
                 if( _switch.valid_blueprint )
                     blueprint = <SwitchManagerBlueprint>_switch.blueprint;
                 else
@@ -243,21 +243,21 @@ class SwitchManagerIndex extends LitElement
     }
 
     private _rowClicked( e )
-    {          
+    {
         navigate( buildUrl(`edit/${e.detail.id}`) )
     }
 
     private async _toggleEnabled( id: string, enabled: boolean )
-    {        
+    {
         this.hass.callWS({ type: buildWSPath('config/enabled'), enabled: !enabled, config_id: id }).then( r => {
             this._populateSwitches();
-            showToast(this, { 
-                message: `Switch ${r.enabled ? 'Enabled':'Disabled'}` 
+            showToast(this, {
+                message: `Switch ${r.enabled ? 'Enabled':'Disabled'}`
             });
-            
+
         }).catch(error => showToast(this, { message: error.message }))
     }
-    
+
     private async _deleteConfirm( _switch )
     {
         showConfirmDialog(this, {
@@ -283,7 +283,7 @@ class SwitchManagerIndex extends LitElement
 
     private _showBlueprintDialog()
     {
-        
+
         fireEvent(this, 'show-dialog', {
             dialogTag: "switch-manager-dialog-blueprint-selector",
             dialogImport: () => import("./dialogs/dialog-blueprint-selector"),
