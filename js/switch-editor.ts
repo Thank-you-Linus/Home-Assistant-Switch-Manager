@@ -1160,7 +1160,7 @@ class SwitchManagerSwitchEditor extends LitElement
         this.sequence = this.config!.buttons[this.button_index].actions[this.action_index].sequence;
 
         // Add area if find in configuration
-        if (this.config!.area) {
+        if (!sequence && this.config!.area) {
             this.sequence = updateObject('area', (val) => (val === '' ? this.config!.area : val), this.sequence) as any
         }
 
