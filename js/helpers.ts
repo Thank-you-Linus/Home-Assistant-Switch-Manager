@@ -47,18 +47,9 @@ export const createConfigFromBlueprint = ( blueprint: SwitchManagerBlueprint ): 
             actions: []
         };
         button.actions.forEach( (action, ii) => {
-            const sequence = [] as any[]
-            if (action.default_script) {
-                sequence.push({
-                  "service": action.default_script,
-                  "data": {
-                    "area": ""
-                  }
-                })
-            }
             config.buttons[i].actions[ii] = {
                 mode: MODES[0],
-                sequence
+                sequence: action.default_sequence || []
             };
         });
     });

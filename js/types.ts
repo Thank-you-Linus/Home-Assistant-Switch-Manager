@@ -34,7 +34,7 @@ export interface SwitchManagerBlueprintButton
 export interface SwitchManagerBlueprintButtonAction
 {
     title: string;
-    default_script?: string;
+    default_sequence?: any[];
     conditions?: SwitchManagerBlueprintCondition[],
 }
 

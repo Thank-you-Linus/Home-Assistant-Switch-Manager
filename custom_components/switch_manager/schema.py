@@ -11,7 +11,7 @@ CONDITION_SCHEMA = vol.Schema(
 BLUEPRINT_ACTION_SCHEMA = vol.Schema(
     {
         vol.Required("title"): cv.string,
-        vol.Optional("default_script"): cv.string,
+        vol.Optional("default_sequence"): cv.ensure_list,
         vol.Optional("conditions", default=[]): vol.Any(cv.string, [CONDITION_SCHEMA]),
     }
 )
