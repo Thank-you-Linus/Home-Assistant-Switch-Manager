@@ -83,7 +83,7 @@ class SwitchManagerDialogRenameSwitch extends LitElement
                     Cancel
                 </mwc-button>
                 <mwc-button @click=${this._save} slot="primaryAction">
-                    Rename
+                    Save
                 </mwc-button>
             </ha-dialog>
         `;

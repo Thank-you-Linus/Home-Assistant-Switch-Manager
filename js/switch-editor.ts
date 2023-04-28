@@ -1123,7 +1123,13 @@ class SwitchManagerSwitchEditor extends LitElement
                     this.config!.name = config.name;
                     this.config!.area = config.area;
                     this._dirty = true;
-                    this._updateSequence();
+
+                    if (this.config!.area) {
+                        // Populate area in buttons if find in configuration
+                        this.config!.buttons = updateObject('area', (val) => (val === '' ? this.config!.area : val), this.config!.buttons)
+                        this._updateSequence();
+                    }
+
                     this.requestUpdate();
                 },
                 onClose: () => {
@@ -1158,11 +1164,6 @@ class SwitchManagerSwitchEditor extends LitElement
             this.config!.buttons[this.button_index].actions[this.action_index].sequence = sequence;
         }
         this.sequence = this.config!.buttons[this.button_index].actions[this.action_index].sequence;
-
-        // Add area if find in configuration
-        if (!sequence && this.config!.area) {
-            this.sequence = updateObject('area', (val) => (val === '' ? this.config!.area : val), this.sequence) as any
-        }
 
         if( ! this._buttonTotalSequence( this.config!.buttons[this.button_index] ) )
         {
