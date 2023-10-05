@@ -6,4 +6,5 @@
 **/Thumbs.db
 **/__pycache__/
 .release-it.json
+.vscode
 .DS_Store
