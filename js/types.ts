@@ -34,6 +34,7 @@ export interface SwitchManagerBlueprintButton
 export interface SwitchManagerBlueprintButtonAction
 {
     title: string;
+    default_sequence?: any[];
     conditions?: SwitchManagerBlueprintCondition[],
 }
 
@@ -41,6 +42,7 @@ export interface SwitchManagerConfig
 {
     id: number|null;
     name: string;
+    area?: string;
     enabled: boolean;
     identifier: string;
     is_mismatch: boolean;

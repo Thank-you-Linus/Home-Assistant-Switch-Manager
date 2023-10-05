@@ -1,4 +1,4 @@
-name: Aqara D1 1 gang switch
+name: Aqara 1 Gang Remote
 service: ZHA
 event_type: zha_event
 identifier_key: device_id
@@ -8,11 +8,26 @@ buttons:
         conditions:
           - key: command
             value: single
+        default_sequence:
+          - service: "linus.press_light_switch"
+            data:
+              area: ""
+              action: "single"
       - title: double press
         conditions:
           - key: command
             value: double
+        default_sequence:
+          - service: "linus.press_light_switch"
+            data:
+              area: ""
+              action: "double"
       - title: long
         conditions:
           - key: command
             value: long press
+        default_sequence:
+          - service: "linus.press_light_switch"
+            data:
+              area: ""
+              action: "long"

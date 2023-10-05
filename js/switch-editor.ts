@@ -21,11 +21,12 @@ import {
 } from "@mdi/js";
 import { SwitchManagerBlueprint, SwitchManagerConfig, SwitchManagerConfigButton } from "./types";
 import { MODES } from "../ha-frontend/data/script";
-import { 
-    buildAssetUrl, 
-    buildUrl, 
-    buildWSPath, 
+import {
+    buildAssetUrl,
+    buildUrl,
+    buildWSPath,
     createConfigFromBlueprint,
+    updateObject,
     showConfirmDialog
 } from "./helpers";
 import { navigate } from "../ha-frontend/common/navigate";
@@ -85,7 +86,7 @@ class SwitchManagerSwitchEditor extends LitElement
     @query('switch-manager-button-actions') button_actions;
     @query("ha-yaml-editor") private _yamlEditor?: HaYamlEditor;
 
-    render() 
+    render()
     {
         if( ! this.config )
             return html``;
@@ -103,7 +104,7 @@ class SwitchManagerSwitchEditor extends LitElement
                             @click=${this._backTapped}>
                         </ha-icon-button>
                         <div main-title id="title-container">
-                            <span>Switch Manager - ${this.config?.name}</span>
+                            <span>Switch Manager - ${this.config?.name} ${this.config?.area && `[${this.config?.area}]`}</span>
                         </div>
                         <div>
                             <ha-button-menu corner="BOTTOM_START" slot="toolbar-icon">
@@ -170,9 +171,9 @@ class SwitchManagerSwitchEditor extends LitElement
                                             .path=${!this.config?.enabled ? mdiPlayCircleOutline : mdiStopCircleOutline}>
                                         </ha-svg-icon>
                                 </mwc-list-item>
-                                
+
                                 <li divider role="separator"></li>
-                                
+
                                 <mwc-list-item
                                     graphic="icon"
                                     .disabled=${!this.config || this.is_new || this.config?._error}
@@ -200,107 +201,112 @@ class SwitchManagerSwitchEditor extends LitElement
                                 </mwc-list-item>
                             </ha-button-menu>
                         </div>
-                    </app-toolbar> 
+                    </app-toolbar>
                 </app-header>
             </ha-app-layout>
             <hui-view>
-                <hui-panel-view>                 
+                <hui-panel-view>
                     ${!this.config?._error ? html`
-                    <h3 id="blueprint-name">${this.blueprint?.service} / ${this.blueprint?.name}</h3>`:''}
+                    <h3 id="blueprint-name">${this.blueprint?.service} / ${this.blueprint?.name}</h3>` : ''}
 
-                    <div id="switch-image" rotate="${this.config.rotate}">
-                    ${this.blueprint && !this.blueprint?.has_image ?
-                        html`<ha-svg-icon .path=${mdiGestureTapButton}></ha-svg-icon>` :
-                        html`<svg id="switch-svg"></svg>`}
+                    <div class="h-full grid grid-cols-1 lg-grid-cols-2">
+                        <div id="switch-image" class="w-full" rotate="${this.config.rotate}">
+                        ${this.blueprint && !this.blueprint?.has_image ?
+                            html`<ha-svg-icon .path=${mdiGestureTapButton}></ha-svg-icon>` :
+                            html`<svg id="switch-svg"></svg>`}
+                        </div>
+                        <div class="p-2 automation-box">
+
+                            ${!this.config?._error ? html`
+                            <switch-manager-button-actions class="w-full"
+                                .hass=${this.hass}
+                                .blueprint_actions=${this.blueprint?.buttons[this.button_index]?.actions}
+                                .config_actions=${this.config.buttons[this.button_index].actions}
+                                .index=${this.action_index}
+                                @changed=${this._actionChanged}>
+                            </switch-manager-button-actions>`: ''}
+
+                            <ha-card outlined>
+                                <div class="card-content">
+
+                                    ${this._errors ? html`
+                                    <ha-alert alert-type="error">
+                                        ${this._errors}
+                                        ${this.config.is_mismatch ? html`<mwc-button slot="action" @click=${this._fixMismatch}>Fix</mwc-button>` : ''}
+                                    </ha-alert>` : ''}
+
+                                    ${this.config && !this.config.enabled ? html`
+                                    <ha-alert alert-type="info">
+                                        Switch is disabled
+                                        <mwc-button slot="action" @click=${this._toggleEnabled}>
+                                            Enable
+                                        </mwc-button>
+                                    </ha-alert>` : ''}
+                                    ${!this.config?._error ? html`
+                                    <div id="sequence-container">
+                                        <div class="header">
+                                            <h2 id="sequence-heading" class="name">
+                                                Sequence
+                                                <ha-selector-select
+                                                    id="mode-selector"
+                                                    .hass=${this.hass}
+                                                    .value=${this.config?.buttons[this.button_index]?.actions[this.action_index].mode}
+                                                    label="Mode"
+                                                    .selector=${{
+                                                        select: {
+                                                            mode: "dropdown",
+                                                            options: MODES.map((mode) => ({
+                                                                label: mode.charAt(0).toUpperCase() + mode.slice(1),
+                                                                value: mode,
+                                                            })),
+                                                        }}
+                                                    }
+                                                    @value-changed=${this._modeValueChanged}>
+                                                </ha-selector-select>
+                                            </h2>
+
+                                            <ha-button-menu corner="TOP_START" slot="toolbar-icon">
+                                                <ha-icon-button
+                                                    slot="trigger"
+                                                    .label=${this.hass.localize("ui.common.menu")}
+                                                    .path=${mdiDotsVertical}>
+                                                </ha-icon-button>
+
+                                                <mwc-list-item
+                                                    graphic="icon"
+                                                    @click=${this._toggleYaml}>
+                                                        ${!this._is_yaml ? 'Yaml Editor' : 'Visual Editor'}
+                                                        <ha-svg-icon slot="graphic" .path=${!this._is_yaml? mdiFileDocumentEditOutline : mdiViewDashboardEditOutline}>
+                                                        </ha-svg-icon>
+                                                </mwc-list-item>
+                                            </ha-button-menu>
+
+                                        </div>
+
+                                        ${this._is_yaml ? html`
+                                        <ha-yaml-editor
+                                            .hass=${this.hass}
+                                            .value=${this.sequence}
+                                            @value-changed=${this._configSequenceChanged}>
+                                        </ha-yaml-editor>`
+                                        : html`
+                                        <ha-automation-action
+                                            .hass=${this.hass}
+                                            role="region"
+                                            aria-labelledby="sequence-heading"
+                                            .actions=${this.sequence}
+                                            @value-changed=${this._configSequenceChanged}
+                                            .narrow=${this.narrow}
+                                            .disabled=${this.disabled}>
+                                        </ha-automation-action>`}
+
+                                    </div>`:''}
+                                </div>
+                            </ha-card>
+
+                        </div>
                     </div>
 
-                    ${!this.config?._error ? html`
-                    <switch-manager-button-actions
-                        .hass=${this.hass}
-                        .blueprint_actions=${this.blueprint?.buttons[this.button_index]?.actions}
-                        .config_actions=${this.config.buttons[this.button_index].actions}
-                        .index=${this.action_index}
-                        @changed=${this._actionChanged}>
-                    </switch-manager-button-actions>`: ''}
-                    
-                    <ha-card outlined>
-                        <div class="card-content">
-
-                            ${this._errors ? html`
-                            <ha-alert alert-type="error">
-                                ${this._errors}
-                                ${this.config.is_mismatch ? html`<mwc-button slot="action" @click=${this._fixMismatch}>Fix</mwc-button>` : ''}
-                            </ha-alert>` : ''}
-
-                            ${this.config && !this.config.enabled ? html`
-                            <ha-alert alert-type="info">
-                                Switch is disabled
-                                <mwc-button slot="action" @click=${this._toggleEnabled}>
-                                    Enable
-                                </mwc-button>
-                            </ha-alert>` : ''}
-                            ${!this.config?._error ? html`
-                            <div id="sequence-container">
-                                <div class="header">
-                                    <h2 id="sequence-heading" class="name">
-                                        Sequence                                
-                                        <ha-selector-select
-                                            id="mode-selector"
-                                            .hass=${this.hass}
-                                            .value=${this.config?.buttons[this.button_index]?.actions[this.action_index].mode}
-                                            label="Mode"
-                                            .selector=${{       
-                                                select: {
-                                                    mode: "dropdown",
-                                                    options: MODES.map((mode) => ({
-                                                        label: mode.charAt(0).toUpperCase() + mode.slice(1),
-                                                        value: mode,
-                                                    })),
-                                                }}
-                                            }
-                                            @value-changed=${this._modeValueChanged}>
-                                        </ha-selector-select>
-                                    </h2>
-
-                                    <ha-button-menu corner="TOP_START" slot="toolbar-icon">
-                                        <ha-icon-button
-                                            slot="trigger"
-                                            .label=${this.hass.localize("ui.common.menu")}
-                                            .path=${mdiDotsVertical}>
-                                        </ha-icon-button>
-        
-                                        <mwc-list-item
-                                            graphic="icon"
-                                            @click=${this._toggleYaml}>
-                                                ${!this._is_yaml ? 'Yaml Editor' : 'Visual Editor'}
-                                                <ha-svg-icon slot="graphic" .path=${!this._is_yaml? mdiFileDocumentEditOutline : mdiViewDashboardEditOutline}>
-                                                </ha-svg-icon>
-                                        </mwc-list-item>
-                                    </ha-button-menu>
-
-                                </div>
-
-                                ${this._is_yaml ? html`
-                                <ha-yaml-editor
-                                    .hass=${this.hass}
-                                    .value=${this.sequence}
-                                    @value-changed=${this._configSequenceChanged}>
-                                </ha-yaml-editor>` 
-                                : html`
-                                <ha-automation-action
-                                    .hass=${this.hass}
-                                    role="region"
-                                    aria-labelledby="sequence-heading"
-                                    .actions=${this.sequence}
-                                    @value-changed=${this._configSequenceChanged}
-                                    .narrow=${this.narrow}
-                                    .disabled=${this.disabled}>
-                                </ha-automation-action>`}
-
-                            </div>`:''}
-                        </div>
-                    </ha-card>
-                    
                     ${!this.config?._error ? html`
                     <div class="fab-container">
                         <ha-fab
@@ -317,7 +323,7 @@ class SwitchManagerSwitchEditor extends LitElement
                         </ha-fab>
                     </div>`:''}
                 </hui-panel-view>
-            </hui-view>            
+            </hui-view>
           `;
     }
 
@@ -340,6 +346,12 @@ class SwitchManagerSwitchEditor extends LitElement
             }
             mwc-list-item {
                 min-width: 165px;
+            }
+            @media (min-width: 1024px) {
+                .automation-box {
+                    height: 100%;
+                    overflow: scroll;
+                }
             }
             ha-card {
                 margin: 0 auto;
@@ -434,17 +446,365 @@ class SwitchManagerSwitchEditor extends LitElement
                 font-weight: bold;
                 color: var(--error-color);
             }
+            /*styling tailwind dwains version*/
+            *, ::after, ::before {
+                box-sizing: border-box;
+            }
+            h1,h2,h3 {
+                margin: 0;
+            }
+            h3 {
+                font-size: 1em;
+            }
+            .absolute {
+                position: absolute
+            }
+            .break-words {
+                overflow-wrap: break-word;
+            }
+            .relative {
+                position: relative
+            }
+            .sticky {
+                position: -webkit-sticky;
+                position: sticky
+            }
+            .top-0 {
+                top: 0px
+            }
+            .bottom-0 {
+                bottom: 0px
+            }
+            .z-30 {
+                z-index: 30
+            }
+            .col-span-1 {
+                grid-column: span 1 / span 1
+            }
+            .col-span-2 {
+                grid-column: span 2 / span 2
+            }
+            .row-span-1 {
+                grid-row: span 1 / span 1
+            }
+            .row-span-2 {
+                grid-row: span 2 / span 2
+            }
+            .my-4 {
+                margin-top: 1rem;
+                margin-bottom: 1rem
+            }
+            .mx-auto {
+                margin-left: auto;
+                margin-right: auto
+            }
+            .mb-2 {
+                margin-bottom: 0.5rem
+            }
+            .mb-4 {
+                margin-bottom: 1rem
+            }
+            .mt-4 {
+                margin-top: 1rem
+            }
+            .mr-0\.5 {
+                margin-right: 0.125rem
+            }
+            .mr-0 {
+                margin-right: 0px
+            }
+            .mb-12 {
+                margin-bottom: 3rem
+            }
+            .mb-5 {
+                margin-bottom: 1.25rem
+            }
+            .mb-16 {
+                margin-bottom: 4rem
+            }
+            .ml-4 {
+                margin-left: 1rem
+            }
+            .block {
+                display: block
+            }
+            .inline-block {
+                display: inline-block
+            }
+            .flex {
+                display: flex
+            }
+            .inline-flex {
+                display: inline-flex
+            }
+            .grid {
+                display: grid
+            }
+            .hidden {
+                display: none
+            }
+            .h-6 {
+                height: 1.5rem
+            }
+            .h-44 {
+                height: 11rem
+            }
+            .h-full {
+                height: 100%
+            }
+            .h-14 {
+                height: 3.5rem
+            }
+            .h-8 {
+                height: 2rem
+            }
+            .w-full {
+                width: 100%
+            }
+            .w-6 {
+                width: 1.5rem
+            }
+            .w-14 {
+                width: 3.5rem
+            }
+            .w-8 {
+                width: 2rem
+            }
+            .w-12 {
+                width: 3rem
+            }
+            .cursor-pointer {
+                cursor: pointer
+            }
+            .grid-flow-row-dense {
+                grid-auto-flow: row dense
+            }
+            .grid-cols-1 {
+                grid-template-columns: repeat(1, minmax(0, 1fr))
+            }
+            .grid-cols-2 {
+                grid-template-columns: repeat(2, minmax(0, 1fr))
+            }
+            .flex-column {
+                flex-direction: column
+            }
+            .flex-wrap {
+                flex-wrap: wrap
+            }
+            .content-between {
+                align-content: space-between
+            }
+            .items-center {
+                align-items: center
+            }
+            .justify-between {
+                justify-content: space-between
+            }
+            .justify-end {
+                justify-content: end
+            }
+            .gap-4 {
+                gap: 1rem
+            }
+            .space-y-0.5 > :not([hidden]) ~ :not([hidden]) {
+                --tw-space-y-reverse: 0;
+                margin-top: calc(0.125rem * calc(1 - var(--tw-space-y-reverse)));
+                margin-bottom: calc(0.125rem * var(--tw-space-y-reverse))
+            }
+            .space-y-0 > :not([hidden]) ~ :not([hidden]) {
+                --tw-space-y-reverse: 0;
+                margin-top: calc(0px * calc(1 - var(--tw-space-y-reverse)));
+                margin-bottom: calc(0px * var(--tw-space-y-reverse))
+            }
+            .rounded {
+                border-radius: 0.25rem
+            }
+            .rounded-md {
+                border-radius: 0.375rem
+            }
+            .bg-gray-800 {
+                --tw-bg-opacity: 1;
+                background-color: rgb(31 41 55 / var(--tw-bg-opacity))
+            }
+            .rounded-lg {
+                border-radius: 0.5rem
+            }
+            .border-2 {
+                border-width: 2px
+            }
+            .border-dashed {
+                border-style: dashed
+            }
+            .border-gray-300 {
+                --tw-border-opacity: 1;
+                border-color: rgb(209 213 219 / var(--tw-border-opacity))
+            }
+            .bg-gray-800 {
+                --tw-bg-opacity: 1;
+                background-color: rgb(31 41 55 / var(--tw-bg-opacity))
+            }
+            .bg-opacity-50 {
+                --tw-bg-opacity: 0.5
+            }
+            .p-2 {
+                padding: 0.5rem;
+            }
+            .p-4 {
+                padding: 1rem
+            }
+            .p-1 {
+                padding: 0.25rem
+            }
+            .p-3 {
+                padding: 0.75rem
+            }
+            .px-1 {
+                padding-left: 0.25rem;
+                padding-right: 0.25rem
+            }
+            .p-12 {
+                padding: 3rem
+            }
+            .py-0\.5 {
+                padding-top: 0.125rem;
+                padding-bottom: 0.125rem
+            }
+            .py-0 {
+                padding-top: 0px;
+                padding-bottom: 0px
+            }
+            .py-1 {
+                padding-top: 0.25rem;
+                padding-bottom: 0.25rem
+            }
+            .px-2 {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem
+            }
+            .text-center {
+                text-align: center
+            }
+            .text-right {
+                text-align: right
+            }
+            .text-xl {
+                font-size: 1.5rem;
+                line-height: 2rem
+            }
+            .text-lg {
+                font-size: 1.125rem;
+                line-height: 1.75rem
+            }
+            .text-sm {
+                font-size: 0.875rem;
+                line-height: 1.25rem
+            }
+            .text-xs {
+                font-size: 0.75rem;
+                line-height: 1rem
+            }
+            .font-semibold {
+                font-weight: 600
+            }
+            .font-medium {
+                font-weight: 500
+            }
+            .capitalize {
+                text-transform: capitalize
+            }
+            .text-gray {
+                color: var(--paper-item-body-secondary-color, var(--secondary-text-color));
+            }
+            .text-white {
+                --tw-text-opacity: 1;
+                color: rgb(255 255 255 / var(--tw-text-opacity))
+            }
+            @media (min-width: 768px) {
+                .md-grid-cols-3 {
+                    grid-template-columns: repeat(3, minmax(0, 1fr))
+                }
+            }
+            @media (min-width: 1024px) {
+                .lg-col-span-1 {
+                    grid-column: span 1 / span 1
+                }
+                .lg-col-span-3 {
+                    grid-column: span 3 / span 3
+                }
+                .lg-col-span-2 {
+                    grid-column: span 2 / span 2
+                }
+                .lg-row-span-1 {
+                    grid-row: span 1 / span 1
+                }
+                .lg-row-span-3 {
+                    grid-row: span 3 / span 3
+                }
+                .lg-row-span-2 {
+                    grid-row: span 2 / span 2
+                }
+                .lg-block {
+                    display: block
+                }
+                .lg-hidden {
+                    display: none
+                }
+                .lg-w-1-2 {
+                    width: 50%
+                }
+                .lg-grid-cols-2 {
+                    grid-template-columns: repeat(2, minmax(0, 1fr))
+                }
+                .lg-grid-cols-3 {
+                    grid-template-columns: repeat(3, minmax(0, 1fr))
+                }
+                .lg-grid-cols-4 {
+                    grid-template-columns: repeat(4, minmax(0, 1fr))
+                }
+            }
+            @media (min-width: 1536px) {
+                .xl-col-span-1 {
+                    grid-column: span 1 / span 1
+                }
+                .xl-col-span-4 {
+                    grid-column: span 4 / span 4
+                }
+                .xl-col-span-2 {
+                    grid-column: span 2 / span 2
+                }
+                .xl-row-span-1 {
+                    grid-row: span 1 / span 1
+                }
+                .xl-row-span-4 {
+                    grid-row: span 4 / span 4
+                }
+                .xl-row-span-2 {
+                    grid-row: span 2 / span 2
+                }
+                .xl-w-1-3 {
+                    width: 33.333333%
+                }
+                .xl-w-2-3 {
+                    width: 66.666667%
+                }
+                .xl-grid-cols-4 {
+                    grid-template-columns: repeat(4, minmax(0, 1fr))
+                }
+                .xl-grid-cols-5 {
+                grid-template-columns: repeat(5, minmax(0, 1fr))
+                }
+            }
             `];
     }
 
-    connectedCallback(): void 
+    connectedCallback(): void
     {
         super.connectedCallback();
         this._loadConfig();
         this.startListeners();
     }
 
-    disconnectedCallback(): void 
+    disconnectedCallback(): void
     {
         this._killListener( '_reloadListener' );
         this._killListener( '_subscribedMonitor' );
@@ -462,7 +822,7 @@ class SwitchManagerSwitchEditor extends LitElement
         }
         return false;
     }
-    
+
     private async startListeners()
     {
         this._reloadListener = await this.hass!.connection.subscribeEvents( (event) => {
@@ -484,11 +844,11 @@ class SwitchManagerSwitchEditor extends LitElement
             this.is_new = true;
             this._dirty = true;
             if( 'blueprint' in this.params )
-                this._loadBlueprint(this.params.blueprint).then( r => {
+            this._loadBlueprint(this.params.blueprint).then( r => {
                     this._setConfig( createConfigFromBlueprint(r.blueprint) );
                     this._showRenameDialog();
                 });
-        }  
+        }
     }
 
     private _loadBlueprint(id: string)
@@ -518,7 +878,7 @@ class SwitchManagerSwitchEditor extends LitElement
         // Start fresh
         this._killListener('_subscribedMonitor');
         this._subscribedMonitor = await this.hass.connection.subscribeMessage((msg) => {
-            
+
             if( msg.event == 'action_triggered' )
             {
                 if( ! this.config?.identifier )
@@ -563,17 +923,17 @@ class SwitchManagerSwitchEditor extends LitElement
     {
         if( !this.blueprint?.has_image )
             return;
-        
+
         // Ensure SVG is in DOM
         await this.updateComplete;
-        
+
         // As this could be a reload, we ensure svg is empty
         this.svg.parentNode.replaceChild(this.svg.cloneNode(false), this.svg);
 
         var img = new Image;
         img.src = buildAssetUrl(`${this.blueprint.id}.png`);
-        img.onload = () => {      
-            // Add headroom for button strokes      
+        img.onload = () => {
+            // Add headroom for button strokes
             this.svg.setAttributeNS(null, 'viewBox', `0 0 ${(img.width).toString()} ${(img.height).toString()}`)
             var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
             svgimg.setAttributeNS(null, 'x', '0');
@@ -619,7 +979,7 @@ class SwitchManagerSwitchEditor extends LitElement
                 svgshape.addEventListener('click', ev => {
                     ev.preventDefault();
                     ev.stopPropagation();
-                    this._setButtonIndex(parseInt((<HTMLElement>ev.target).getAttribute('index')!));                
+                    this._setButtonIndex(parseInt((<HTMLElement>ev.target).getAttribute('index')!));
                 });
                 this.svg.append(svgshape);
             });
@@ -654,9 +1014,9 @@ class SwitchManagerSwitchEditor extends LitElement
         this._block_save = true;
         this._dirty = false;
         this.hass.callWS({
-            type: buildWSPath('config/save'), 
+            type: buildWSPath('config/save'),
             config: {...this.config, blueprint: this.config.blueprint.id}
-        }).then(r => {            
+        }).then(r => {
             if( this.is_new )
             {
                 this.is_new = false;
@@ -668,7 +1028,7 @@ class SwitchManagerSwitchEditor extends LitElement
         }).catch(error => {
             showToast(this, { message: error.message });
             this._errors = error.message;
-            this._dirty = true;            
+            this._dirty = true;
         }).finally(() => this._block_save = false);
     }
 
@@ -682,7 +1042,7 @@ class SwitchManagerSwitchEditor extends LitElement
         if( index == this.button_index )
           return;
         this.button_index = index;
-        
+
         this.svg.querySelector('[selected]').removeAttribute('selected');
         this.svg.querySelector(`[index="${index}"]`).setAttribute('selected', '');
 
@@ -697,8 +1057,8 @@ class SwitchManagerSwitchEditor extends LitElement
             this._yamlEditor?.setValue( this.sequence );
     }
 
-    private _configSequenceChanged(ev: CustomEvent) 
-    {   
+    private _configSequenceChanged(ev: CustomEvent)
+    {
         if( this._is_yaml )
         {
             if( ! ev.detail.value || ! Array.isArray(ev.detail.value) )
@@ -763,11 +1123,11 @@ class SwitchManagerSwitchEditor extends LitElement
                 },
                 onClose: () => {}
             },
-        });        
+        });
     }
 
     private async _showRenameDialog(): Promise<void>
-    {        
+    {
         fireEvent(this, "show-dialog", {
             dialogTag: "switch-manager-dialog-rename-switch",
             dialogImport: () => import("./dialogs/dialog-rename-switch"),
@@ -775,7 +1135,15 @@ class SwitchManagerSwitchEditor extends LitElement
                 config: this.config,
                 update: (config) => {
                     this.config!.name = config.name;
+                    this.config!.area = config.area;
                     this._dirty = true;
+
+                    if (this.config!.area) {
+                        // Populate area in buttons if find in configuration
+                        this.config!.buttons = updateObject('area', (val) => (val === '' ? this.config!.area : val), this.config!.buttons)
+                        this._updateSequence();
+                    }
+
                     this.requestUpdate();
                 },
                 onClose: () => {
@@ -845,7 +1213,7 @@ class SwitchManagerSwitchEditor extends LitElement
 
     private _toggleEnabled()
     {
-        
+
         this.hass.callWS({ type: buildWSPath('config/enabled'), enabled: !this.config!.enabled, config_id: this.config!.id }).then( r => {
             this.config!.enabled = r.enabled;
             this.requestUpdate('config');
@@ -876,7 +1244,7 @@ class SwitchManagerSwitchEditor extends LitElement
         });
     }
 
-    private async confirmUnsavedChanged(): Promise<boolean> 
+    private async confirmUnsavedChanged(): Promise<boolean>
     {
         if (this._dirty) {
             return showConfirmationDialog(this, {
@@ -894,7 +1262,7 @@ class SwitchManagerSwitchEditor extends LitElement
         return true;
     }
 
-    private async _fixMismatch() 
+    private async _fixMismatch()
     {
         if( ! this.config!.is_mismatch )
             return;
@@ -923,7 +1291,7 @@ class SwitchManagerSwitchEditor extends LitElement
         this._errors = undefined;
 
         this.hass.callWS({
-            type: buildWSPath('config/save'), 
+            type: buildWSPath('config/save'),
             config: {...this.config, blueprint: this.config!.blueprint.id},
             fix_mismatch: true
         }).then(r => {
@@ -933,8 +1301,8 @@ class SwitchManagerSwitchEditor extends LitElement
             showToast(this, { message: error.message });
         });
     }
-    
-    private _backTapped = async () => 
+
+    private _backTapped = async () =>
     {
         const result = await this.confirmUnsavedChanged();
         if (result) {

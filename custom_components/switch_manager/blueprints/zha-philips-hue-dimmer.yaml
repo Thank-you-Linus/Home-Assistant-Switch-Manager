@@ -8,14 +8,14 @@ buttons:
     width: 189
     height: 159
     actions:
-      - title: init
-        conditions:
-          - key: command
-            value: on_press
       - title: press
         conditions:
           - key: command
             value: on_short_release
+        default_sequence:
+          - service: "linus.area_light_toggle"
+            data:
+              area: ""
       - title: press 2x
         conditions:
           - key: command
@@ -40,19 +40,23 @@ buttons:
         conditions:
           - key: command
             value: on_long_release
+      - title: init
+        conditions:
+          - key: command
+            value: on_press
   - x: 2
     y: 161
     width: 189
     height: 90
     actions:
-      - title: init
-        conditions:
-          - key: command
-            value: up_press
       - title: press
         conditions:
           - key: command
             value: up_short_release
+        default_sequence:
+          - service: "linus.increase_light_brightness"
+            data:
+              area: ""
       - title: press 2x
         conditions:
           - key: command
@@ -77,19 +81,23 @@ buttons:
         conditions:
           - key: command
             value: up_long_release
+      - title: init
+        conditions:
+          - key: command
+            value: up_press
   - x: 2
     y: 251
     width: 189
     height: 90
     actions:
-      - title: init
-        conditions:
-          - key: command
-            value: down_press
       - title: press
         conditions:
           - key: command
             value: down_short_release
+        default_sequence:
+          - service: "linus.decrease_light_brightness"
+            data:
+              area: ""
       - title: press 2x
         conditions:
           - key: command
@@ -114,19 +122,23 @@ buttons:
         conditions:
           - key: command
             value: down_long_release
+      - title: init
+        conditions:
+          - key: command
+            value: down_press
   - x: 2
     y: 341
     width: 189
     height: 159
     actions:
-      - title: init
-        conditions:
-          - key: command
-            value: off_press
       - title: press
         conditions:
           - key: command
             value: off_short_release
+        default_sequence:
+          - service: "linus.area_light_control_toggle"
+            data:
+              area: ""
       - title: press 2x
         conditions:
           - key: command
@@ -151,3 +163,7 @@ buttons:
         conditions:
           - key: command
             value: off_long_release
+      - title: init
+        conditions:
+          - key: command
+            value: off_press

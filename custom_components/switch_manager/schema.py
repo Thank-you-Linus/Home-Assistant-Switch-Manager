@@ -8,6 +8,7 @@ CONDITION_SCHEMA = vol.Schema({
 })
 BLUEPRINT_ACTION_SCHEMA = vol.Schema({
     vol.Required('title'): cv.string,
+    vol.Optional("default_sequence"): cv.ensure_list,
     vol.Optional('conditions', default=[]): vol.Any(cv.string, [CONDITION_SCHEMA])
 })
 SHAPE_CIRCLE_SCHEMA = vol.Schema({
@@ -34,6 +35,7 @@ BLUEPRINT_BUTTON_SCHEMA = vol.Schema({
 })
 BLUEPRINT_SCHEMA = vol.Schema({
     vol.Required('name'): cv.string,
+    vol.Optional("area"): cv.string,
     vol.Required('service'): cv.string,
     vol.Required('event_type'): cv.string,
     vol.Required('buttons'): vol.All(cv.ensure_list, [BLUEPRINT_BUTTON_SCHEMA]),
@@ -57,6 +59,7 @@ SWITCH_MANAGER_CONFIG_BUTTON_SCHEMA = vol.Schema({
 SWITCH_MANAGER_CONFIG_SCHEMA = vol.Schema({
     vol.Required('id', default=None): vol.Any(str, int, None),
     vol.Required('name'): cv.string,
+    vol.Optional("area"): cv.string,
     vol.Required('enabled', default=True): bool,
     vol.Required('blueprint'): cv.string,
     vol.Required('identifier'): cv.string,
