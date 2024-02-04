@@ -1,6 +1,6 @@
 import voluptuous as vol
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.script import SCRIPT_MODE_CHOICES, DEFAULT_SCRIPT_MODE
+from homeassistant.helpers.script import DEFAULT_SCRIPT_MODE, SCRIPT_MODE_CHOICES
 
 CONDITION_SCHEMA = vol.Schema({
     vol.Required('key'): cv.string,
@@ -14,7 +14,7 @@ BLUEPRINT_ACTION_SCHEMA = vol.Schema({
 SHAPE_CIRCLE_SCHEMA = vol.Schema({
     vol.Required('x'): cv.positive_int,
     vol.Required('y'): cv.positive_int,
-    vol.Required('width'): cv.positive_int  
+    vol.Required('width'): cv.positive_int
 })
 SHAPE_RECT_SCHEMA = SHAPE_CIRCLE_SCHEMA.extend({
     vol.Required('height'): cv.positive_int
@@ -40,6 +40,7 @@ BLUEPRINT_SCHEMA = vol.Schema({
     vol.Required('event_type'): cv.string,
     vol.Required('buttons'): vol.All(cv.ensure_list, [BLUEPRINT_BUTTON_SCHEMA]),
     vol.Optional('conditions', default=[]): vol.Any(cv.string, [CONDITION_SCHEMA]),
+    vol.Optional('default_sequence', default=[]): vol.Any(cv.string, []),
     vol.Optional('info'): cv.string
 })
 BLUEPRINT_EVENT_SCHEMA = BLUEPRINT_SCHEMA.extend({
