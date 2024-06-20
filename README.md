@@ -1,3 +1,13 @@
+# To pull new hotness from Home Assistant Switch Manager repo:
+
+```
+cd Home Assistant Switch Manager
+git remote add upstream https://github.com/Sian-Lee-SA/Home-Assistant-Switch-Manager.git
+git pull upstream master # Creates a merge commit
+git push origin master
+```
+Awesome, your private repo now has the latest code from the public repo plus your changes.
+
 # Home Assistant Switch Manager
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
