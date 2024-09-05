@@ -1,13 +1,11 @@
-/homeassistant
-/homeassistant-frontend
-/ha-frontend
-**/node_modules
 **/@eaDir
 **/Thumbs.db
 **/__pycache__/
-.release-it.json
 .vscode
+
+# Start: Linus code
 .DS_Store
 node_modules
 .yarn
 build
+# End: Linus code

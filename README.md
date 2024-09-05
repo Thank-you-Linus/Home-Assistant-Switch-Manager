@@ -13,9 +13,13 @@ Awesome, your private repo now has the latest code from the public repo plus you
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
 [![switch_manager_release](https://badgen.net/github/release/Sian-Lee-SA/Home-Assistant-Switch-Manager/stable?scale=1.3&color=41bdf5)](https://github.com/Sian-Lee-SA/Home-Assistant-Switch-Manager/stable) [![switch_manager_stars](https://badgen.net/github/stars/Sian-Lee-SA/Home-Assistant-Switch-Manager?scale=1.3&color=41bdf5)](https://github.com/Sian-Lee-SA/Home-Assistant-Switch-Manager/stargazers) [![switch_manager_contributors](https://badgen.net/github/contributors/Sian-Lee-SA/Home-Assistant-Switch-Manager?scale=1.3&color=41bdf5)](https://github.com/Sian-Lee-SA/Home-Assistant-Switch-Manager)
+
 ## About
 
 Switch manager is a centralised component to handle button pushes for your wireless switches. This includes anything passed through the event bus or MQTT. The component relies on switch blueprints which is easily made to allow GUI configuration of your switches and their button pushes. This helps remove clutter from the automations view as they will be handled independently by this component.
+
+> [!WARNING]
+> The device sequence action is currently unsupported, use service/action calls instead as this should be used thoughout Home Assistant anyway.
 
 > I am happy to accept any pull requests for anyone who wishes to submit missing blueprint for switches from this repository as to help eliminate other users from having to build their own.
 
