@@ -8,3 +8,6 @@
 .release-it.json
 .vscode
 .DS_Store
+node_modules
+.yarn
+build
