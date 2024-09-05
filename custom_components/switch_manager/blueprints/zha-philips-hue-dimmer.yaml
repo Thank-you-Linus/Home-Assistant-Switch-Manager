@@ -13,7 +13,7 @@ buttons:
           - key: command
             value: on_short_release
         default_sequence:
-          - service: "linus.area_light_toggle"
+          - service: "magic_areas.area_light_toggle"
             data:
               area: ""
       - title: press 2x
@@ -54,7 +54,7 @@ buttons:
           - key: command
             value: up_short_release
         default_sequence:
-          - service: "linus.increase_light_brightness"
+          - service: "magic_areas.increase_light_brightness"
             data:
               area: ""
       - title: press 2x
@@ -95,7 +95,7 @@ buttons:
           - key: command
             value: down_short_release
         default_sequence:
-          - service: "linus.decrease_light_brightness"
+          - service: "magic_areas.decrease_light_brightness"
             data:
               area: ""
       - title: press 2x
@@ -136,7 +136,7 @@ buttons:
           - key: command
             value: off_short_release
         default_sequence:
-          - service: "linus.area_light_control_toggle"
+          - service: "magic_areas.area_light_control_toggle"
             data:
               area: ""
       - title: press 2x

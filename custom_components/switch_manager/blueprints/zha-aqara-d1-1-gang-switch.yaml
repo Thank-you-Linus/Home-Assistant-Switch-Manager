@@ -9,7 +9,7 @@ buttons:
           - key: command
             value: single
         default_sequence:
-          - service: "linus.press_light_switch"
+          - service: "magic_areas.press_light_switch"
             data:
               area: ""
               action: "single"
@@ -18,7 +18,7 @@ buttons:
           - key: command
             value: double
         default_sequence:
-          - service: "linus.press_light_switch"
+          - service: "magic_areas.press_light_switch"
             data:
               area: ""
               action: "double"
@@ -27,7 +27,7 @@ buttons:
           - key: command
             value: long press
         default_sequence:
-          - service: "linus.press_light_switch"
+          - service: "magic_areas.press_light_switch"
             data:
               area: ""
               action: "long"
