@@ -1,13 +1,13 @@
 import { customElement, property, state } from "lit/decorators.js";
 import { html, LitElement, PropertyValues } from "lit";
-import { applyThemesOnElement } from "../ha-frontend/common/dom/apply_themes_on_element";
-import { HomeAssistant } from "../ha-frontend/types";
-import { Constructor } from "../ha-frontend/types";
-import NotificationMixin from "../ha-frontend/state/notification-mixin";
-import { dialogManagerMixin } from "../ha-frontend/state/dialog-manager-mixin";
-import "../ha-frontend/types";
-import "../ha-frontend/resources/ha-style";
-import "../ha-frontend/resources/roboto";
+import { applyThemesOnElement } from "../ha-frontend/src/common/dom/apply_themes_on_element";
+import { HomeAssistant } from "../ha-frontend/src/types";
+import { Constructor } from "../ha-frontend/src/types";
+import NotificationMixin from "../ha-frontend/src/state/notification-mixin";
+import { dialogManagerMixin } from "../ha-frontend/src/state/dialog-manager-mixin";
+import "../ha-frontend/src/types";
+import "../ha-frontend/src/resources/ha-style";
+import "../ha-frontend/src/resources/roboto";
 import "./index";
 import "./switch-editor";
 

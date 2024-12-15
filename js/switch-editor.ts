@@ -20,7 +20,7 @@ import {
     mdiRotateRight
 } from "@mdi/js";
 import { SwitchManagerBlueprint, SwitchManagerConfig, SwitchManagerConfigButton } from "./types";
-import { MODES } from "../ha-frontend/data/script";
+import { MODES } from "../ha-frontend/src/data/script";
 import {
     buildAssetUrl,
     buildUrl,
@@ -29,24 +29,24 @@ import {
     updateObject,
     showConfirmDialog
 } from "./helpers";
-import { navigate } from "../ha-frontend/common/navigate";
-import { fireEvent } from "../ha-frontend/common/dom/fire_event";
-import { showToast } from "../ha-frontend/util/toast";
 import { fabStyle } from "./styles";
-import { haStyle } from "../ha-frontend/resources/styles";
 import "@polymer/app-layout/app-header/app-header";
 import "@polymer/app-layout/app-toolbar/app-toolbar";
 import "./button-actions";
-import "../ha-frontend/types";
-import "../ha-frontend/panels/config/automation/action/ha-automation-action";
-import "../ha-frontend/components/ha-yaml-editor";
-import type { HaYamlEditor } from "../ha-frontend/components/ha-yaml-editor";
-import { showConfirmationDialog } from "../ha-frontend/dialogs/generic/show-dialog-box";
-import { afterNextRender } from "../ha-frontend/common/util/render-status";
-import "../ha-frontend/components/ha-fab";
-import "../ha-frontend/components/ha-card";
-import "../ha-frontend/components/ha-button-menu";
-import "../ha-frontend/components/ha-chip";
+import "../ha-frontend/src/types";
+import "../ha-frontend/src/panels/config/automation/action/ha-automation-action";
+import "../ha-frontend/src/components/ha-yaml-editor";
+import "../ha-frontend/src/components/ha-fab";
+import "../ha-frontend/src/components/ha-card";
+import "../ha-frontend/src/components/ha-button-menu";
+import "../ha-frontend/src/components/chips/ha-chip-set";
+import { HaYamlEditor } from "../ha-frontend/src/components/ha-yaml-editor";
+import { showToast } from "../ha-frontend/src/util/toast";
+import { navigate } from "../ha-frontend/src/common/navigate";
+import { showConfirmationDialog } from "../ha-frontend/src/dialogs/generic/show-dialog-box";
+import { afterNextRender } from "../ha-frontend/src/common/util/render-status";
+import { fireEvent } from "../ha-frontend/src/common/dom/fire_event";
+import { haStyle } from "../ha-frontend/src/resources/styles";
 
 declare global {
     interface HTMLElementTagNameMap {

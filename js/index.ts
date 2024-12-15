@@ -17,22 +17,22 @@ import {
     buildWSPath,
     showConfirmDialog
 } from "./helpers";
-import { navigate } from "../ha-frontend/common/navigate";
-import { fireEvent } from "../ha-frontend/common/dom/fire_event";
-import { showToast } from "../ha-frontend/util/toast";
+import { navigate } from "../ha-frontend/src/common/navigate";
+import { fireEvent } from "../ha-frontend/src/common/dom/fire_event";
+import { showToast } from "../ha-frontend/src/util/toast";
 import { fabStyle } from "./styles";
-import { haStyle, haStyleScrollbar } from "../ha-frontend/resources/styles"
-import { computeRTLDirection } from "../ha-frontend/common/util/compute_rtl";
+import { haStyle, haStyleScrollbar } from "../ha-frontend/src/resources/styles"
+import { computeRTLDirection } from "../ha-frontend/src/common/util/compute_rtl";
 import "@polymer/app-layout/app-header/app-header";
 import "@polymer/app-layout/app-toolbar/app-toolbar";
-import "../ha-frontend/layouts/ha-app-layout";
-import "../ha-frontend/components/ha-menu-button";
-import "../ha-frontend/components/ha-fab";
-import "../ha-frontend/components/ha-chip";
-import "../ha-frontend/components/ha-icon-overflow-menu";
+import "../ha-frontend/src/layouts/ha-app-layout";
+import "../ha-frontend/src/components/ha-menu-button";
+import "../ha-frontend/src/components/ha-fab";
+import "../ha-frontend/src/components/chips/ha-chip-set";
+import "../ha-frontend/src/components/ha-icon-overflow-menu";
 import type {
     DataTableColumnContainer
-} from "../ha-frontend/components/data-table/ha-data-table";
+} from "../ha-frontend/src/components/data-table/ha-data-table";
 import "./components/sm-data-table";
 import "./dialogs/dialog-blueprint-selector";
 
